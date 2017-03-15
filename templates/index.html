@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<svg width="960" height="500"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<style>
+
+.legend_text {
+  font: 16px Helvetica;
+  font-weight: bold;
+}
+
+</style>
+
+<script>
+
+var svg = d3.select("svg"),
+    margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = +svg.attr("width") - margin.left - margin.right,
+    graph_height = +svg.attr("height") * .7 - margin.top - margin.bottom,
+    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+var x = d3.scaleTime()
+    .rangeRound([0, width]);
+
+var y = d3.scaleLinear()
+    .rangeRound([graph_height, 0]);
+
+var voronoi = d3.voronoi()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.value); })
+    .extent([[-margin.left, -margin.top], [width + margin.right, graph_height + margin.bottom]]);
+
+
+d3.json("/daily_counts", function(daily_entries) {
+  daily_entries.forEach(function(daily_entry) {
+    daily_entry.date = d3.isoParse(daily_entry.date);
+  });
+
+  x.domain(d3.extent(daily_entries, function(daily_entry) { return daily_entry.date; }));
+  y.domain([
+    0,
+    d3.max(daily_entries, function(daily_entry) {
+      return d3.max(d3.values(daily_entry.name_to_count));
+    })
+  ]);
+
+  g.append("g")
+      .attr("transform", "translate(0," + graph_height + ")")
+      .call(d3.axisBottom(x))
+    .select(".domain")
+      .remove();
+
+  g.append("g")
+      .call(d3.axisLeft(y))
+    .append("text")
+      .attr("fill", "#000")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .attr("text-anchor", "end")
+      .text("Num packages");
+
+  var repo_names = {};
+  daily_entries.forEach(function(daily_entry) {
+    Object.keys(daily_entry.name_to_count).forEach(function(key) {
+      repo_names[key] = true;
+    });
+  });
+
+  var line_count = 0;
+  Object.keys(repo_names).forEach(function(repo_name) {
+    var line = d3.line()
+      .x(function(daily_entry) { return x(daily_entry.date); })
+      .y(function(daily_entry) { return y(daily_entry.name_to_count[repo_name] || 0); });
+
+    g.append("path")
+      .datum(daily_entries)
+      .attr("fill", "none")
+      .attr("stroke", color(line_count))
+      .attr("stroke-linejoin", "round")
+      .attr("stroke-linecap", "round")
+      .attr("stroke-width", 1.5)
+      .attr("d", line);
+
+    g.append("text")
+      .attr("x", line_count % 4 * 200)
+      .attr("y", graph_height + 50 + Math.floor(line_count / 4) * 20)
+      .attr("class", "legend_text")
+      .style("fill", color(line_count))
+      .text(repo_name);
+
+    line_count += 1;
+  });
+});
+</script>

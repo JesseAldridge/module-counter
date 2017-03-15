@@ -22,8 +22,18 @@ t.start()
 
 @app.route('/')
 def index():
-  # TODO: add graph
-  return json.dumps(g.daily_counts, indent=2)
+  return flask.render_template('index.html')
+
+@app.route('/daily_counts')
+def daily_counts():
+  print 'daily_counts:', g.daily_counts[0]
+  return flask.jsonify(g.daily_counts)
+
+
+@app.route('/voronoi_test')
+def voroni_test():
+  return flask.render_template('voronoi_test.html')
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port, debug=(port != 80))
