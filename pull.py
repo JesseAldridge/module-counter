@@ -3,14 +3,15 @@ from datetime import datetime
 
 import requests
 
+import config
+
+
 def pull_all(testing):
   name_to_count = {}
 
-  with open('trackers.json') as f:
-    trackers_str = f.read()
-  tracker_dicts = json.loads(trackers_str)
+  tracker_dicts = config.config_dict['trackers']
   if testing:
-    tracker_dicts = tracker_dicts[:2]
+    tracker_dicts = tracker_dicts[:3]
 
   for d in tracker_dicts:
     try:
@@ -26,7 +27,7 @@ def pull_all(testing):
     return obj.isoformat() if hasattr(obj, 'isoformat') else obj
   out_str = json.dumps(out_dict, default=dt_handler, indent=2) + ',\n'
 
-  with open(os.path.expanduser('~/daily_counts.txt'), 'a') as f:
+  with open(os.path.expanduser(config.config_dict['out_path']), 'a') as f:
     f.write(out_str)
 
 def pull_count(name_to_count, name=None, url=None, regex=None, key=None, is_full_list=None):

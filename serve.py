@@ -1,6 +1,8 @@
-import sys, json, threading, time
+import sys, json, threading, time, os
 
 import flask
+
+import config
 
 app = flask.Flask(__name__)
 port = int(sys.argv[1]) if len(sys.argv) == 2 else 80
@@ -10,7 +12,7 @@ class g:
 
 def load_data():
   while True:
-    with open('out.txt') as f:
+    with open(os.path.expanduser(config.config_dict['out_path'])) as f:
       json_text = f.read()
 
     g.daily_counts = json.loads('[' + json_text[:-2] + ']')
