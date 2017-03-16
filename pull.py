@@ -1,4 +1,4 @@
-import re, json, time, traceback, sys
+import re, json, time, traceback, sys, os
 from datetime import datetime
 
 import requests
@@ -26,7 +26,7 @@ def pull_all(testing):
     return obj.isoformat() if hasattr(obj, 'isoformat') else obj
   out_str = json.dumps(out_dict, default=dt_handler, indent=2) + ',\n'
 
-  with open('out.txt', 'a') as f:
+  with open(os.path.expanduser('~/daily_counts.txt'), 'a') as f:
     f.write(out_str)
 
 def pull_count(name_to_count, name=None, url=None, regex=None, key=None, is_full_list=None):
